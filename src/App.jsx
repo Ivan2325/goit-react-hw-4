@@ -1,89 +1,82 @@
-import React, { useState, useEffect } from "react";
-import SearchBar from "./components/SearchBar/SearchBar";
-import ImageGallery from "./components/ImageGallery/ImageGallery";
-import Loader from "./components/Loader/Loader";
-import ErrorMessage from "./components/ErrorMessage/ErrorMessage";
-import LoadMoreBtn from "./components/LoadMoreBtn/LoadMoreBtn";
-import ImageModal from "./components/ImageModal/ImageModal";
-import axios from "axios";
-import "./App.css";
+import { useState, useEffect } from 'react';
+import fetchImages from './api/fetchImages';
+import SearchBar from './components/SearchBar/SearchBar';
+import ImageGallery from './components/ImageGallery/ImageGallery';
+import Loader from './components/Loader/Loader';
+import ErrorMessage from './components/ErrorMessage/ErrorMessage';
+import LoadMoreBtn from './components/LoadMoreBtn/LoadMoreBtn';
+import './App.css'; // Загальні стилі для App
 
-const App = () => {
-  const [images, setImages] = useState([]);
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [modalImage, setModalImage] = useState(null);
+function App() {
+  const [images, setImages] = useState([]); // Список зображень
+  const [query, setQuery] = useState(''); // Ключове слово пошуку
+  const [page, setPage] = useState(1); // Поточна сторінка
+  const [loading, setLoading] = useState(false); // Індикатор завантаження
+  const [error, setError] = useState(null); // Помилки
+  const [totalImages, setTotalImages] = useState(0); // Загальна кількість зображень
 
-  const handleSearch = (newQuery) => {
+  // Обробник пошуку
+  const handleSearch = async (newQuery) => {
+    if (newQuery.trim() === '') return;
+
     setQuery(newQuery);
     setPage(1);
     setImages([]);
+    setError(null);
+
+    try {
+      setLoading(true);
+      const data = await fetchImages(newQuery, 1);
+      setImages(data.results);
+      setTotalImages(data.total);
+    } catch (err) {
+      setError('Failed to fetch images. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {
-    if (!query) return;
+  // Завантаження додаткових сторінок
+  const loadMoreImages = async () => {
+    try {
+      setLoading(true);
+      const nextPage = page + 1;
+      const data = await fetchImages(query, nextPage);
+      setImages((prevImages) => [...prevImages, ...data.results]);
+      setPage(nextPage);
 
-    const fetchImages = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await axios.get(
-          `https://api.unsplash.com/search/photos`,
-          {
-            params: {
-              query,
-              page,
-              per_page: 12,
-              client_id: "YOUR_UNSPLASH_API_KEY",
-            },
-          }
-        );
-
-        const newImages = response.data.results.map((img) => ({
-          id: img.id,
-          small: img.urls.small,
-          large: img.urls.full,
-          alt: img.alt_description,
-        }));
-
-        setImages((prevImages) => [...prevImages, ...newImages]);
-
-        // Автоскрол після додавання нових зображень
-        if (page > 1) {
-          window.scrollBy({
-            top: window.innerHeight / 1.5,
-            behavior: "smooth",
-          });
-        }
-      } catch (error) {
-        setError("Something went wrong. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchImages();
-  }, [query, page]);
-
-  const loadMore = () => setPage((prevPage) => prevPage + 1);
-
-  const openModal = (image) => setModalImage(image);
-  const closeModal = () => setModalImage(null);
+      // Автоскрол на нові рядки
+      setTimeout(() => {
+        window.scrollBy({
+          top: window.innerHeight,
+          behavior: 'smooth',
+        });
+      }, 500);
+    } catch (err) {
+      setError('Failed to load more images.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="app">
+    <div className="App">
+      {/* Пошуковий бар */}
       <SearchBar onSubmit={handleSearch} />
+
+      {/* Галерея зображень */}
       {error && <ErrorMessage message={error} />}
-      <ImageGallery images={images} onImageClick={openModal} />
-      {isLoading && <Loader />}
-      {images.length > 0 && !isLoading && <LoadMoreBtn onClick={loadMore} />}
-      {modalImage && <ImageModal image={modalImage} onClose={closeModal} />}
+      <ImageGallery images={images} />
+
+      {/* Індикатор завантаження */}
+      {loading && <Loader />}
+
+      {/* Кнопка "Load More" */}
+      {!loading && images.length > 0 && images.length < totalImages && (
+        <LoadMoreBtn onClick={loadMoreImages} />
+      )}
     </div>
   );
-};
+}
 
 export default App;
-
