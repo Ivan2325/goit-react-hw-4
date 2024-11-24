@@ -11,7 +11,7 @@ const SearchBar = ({ onSubmit }) => {
     e.preventDefault();
     if (inputValue.trim() === "") return;
     onSubmit(inputValue);
-    setInputValue(""); // Очистка після сабміту
+    setInputValue(""); 
   };
 
   return (
