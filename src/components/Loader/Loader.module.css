@@ -1,6 +1,5 @@
-.loader {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
-  
+.loader_wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

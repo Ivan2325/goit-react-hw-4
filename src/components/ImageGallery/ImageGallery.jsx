@@ -1,32 +1,29 @@
-import React from "react";
-import PropTypes from "prop-types";
 import ImageCard from "../ImageCard/ImageCard";
-import styles from "./ImageGallery.module.css";
+import s from "./ImageGallery.module.css";
 
-const ImageGallery = ({ images, onImageClick }) => {
+const ImageGallery = ({ cards = [], openModal }) => {
   return (
-    <ul className={styles.gallery}>
-      {images.map((image) => (
-        <ImageCard
-          key={image.id}
-          image={image}
-          onClick={() => onImageClick(image.large)}
-        />
-      ))}
-    </ul>
+    <>
+      <ul className={s.list}>
+        {cards.map((card) => (
+          <li key={card.id}>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                openModal(card.id);
+              }}
+            >
+              <ImageCard
+                gallerySize={card.urls.small}
+                descr={card.alt_description}
+              />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </>
   );
-};
-
-ImageGallery.propTypes = {
-  images: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      small: PropTypes.string.isRequired,
-      large: PropTypes.string.isRequired,
-      alt: PropTypes.string,
-    })
-  ).isRequired,
-  onImageClick: PropTypes.func.isRequired,
 };
 
 export default ImageGallery;

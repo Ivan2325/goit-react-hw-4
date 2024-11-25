@@ -1,26 +1,11 @@
-import React from "react";
-import PropTypes from "prop-types";
-import styles from "./ImageCard.module.css";
+import s from "./ImageCard.module.css";
 
-const ImageCard = ({ image, onClick }) => {
+const ImageCard = ({ gallerySize, descr }) => {
   return (
-    <li className={styles.card} onClick={onClick}>
-      <img
-        src={image.small}
-        alt={image.alt || "Image"}
-        className={styles.image}
-      />
-    </li>
+    <div>
+      <img className={s.img} src={gallerySize} alt={descr} loading="lazy" />
+    </div>
   );
-};
-
-ImageCard.propTypes = {
-  image: PropTypes.shape({
-    small: PropTypes.string.isRequired,
-    large: PropTypes.string.isRequired,
-    alt: PropTypes.string,
-  }).isRequired,
-  onClick: PropTypes.func.isRequired,
 };
 
 export default ImageCard;
